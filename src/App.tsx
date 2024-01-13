@@ -1,8 +1,7 @@
 import { atomWithStorage } from 'jotai/utils';
 import { useAtom } from 'jotai';
 
-const initialTotal: number = 130
-
+const initialTotal: number = 0
 
 const expenseAtom = atomWithStorage<string>('expense', '');
 const reasonAtom = atomWithStorage<string>('reason', '');
@@ -19,7 +18,10 @@ const logAtom = atomWithStorage<{ expense: string; reason: string }[]>('log', []
     localStorage.removeItem(key);
   }
 });
-const totalAtom = atomWithStorage<number>('total', initialTotal);
+const totalAtom = atomWithStorage<number>('total', 0);
+const showInitialInputAtom = atomWithStorage<boolean>('showInitialInput', true);
+const initialTotalInputAtom = atomWithStorage<string>('initialTotalInput', '');
+
 
 function App() {
   
@@ -43,9 +45,9 @@ function App() {
   const [reason, setReason] = useAtom(reasonAtom);
   const [log, setLog] = useAtom(logAtom);
   const [total, setTotal] = useAtom(totalAtom);
-
-
-
+  const [showInitialInput, setShowInitialInput] = useAtom(showInitialInputAtom);
+  const [initialTotalInput, setInitialTotalInput] = useAtom(initialTotalInputAtom);
+  
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -53,6 +55,16 @@ function App() {
       setExpense(value);
     } else if (id === 'reason') {
       setReason(value);
+    } else if (id === 'total') {
+      setTotal(total)
+    }
+  };
+
+  const handleInitialTotalSubmit = () => {
+    const initialTotalValue = parseFloat(initialTotalInput);
+    if (!isNaN(initialTotalValue)) {
+      setTotal(initialTotalValue);
+      setShowInitialInput(false);
     }
   };
 
@@ -78,15 +90,24 @@ function App() {
 
   const handleDeleteAll = () => {
     setLog([]); // Clear the log
-    setTotal(initialTotal); // Reset the total to the initial value
-  };
+    setTotal(initialTotal);
+    setShowInitialInput(true);
+    setInitialTotalInput('');
+    };
   
   return (  
     <div className="h-screen w-full bg-bottom-left md:bg-center bg-cover bg-[url('/money.png')] bg-no-repeat p-5 flex flex-col gap-5 justify-center items-center p-4">
 
       <div className='bg-white rounded-lg md:w-1/2 w-5/6 drop-shadow-md p-4'>
-        <h1 className=" flex justify-center">Week of {date}</h1>
-        <h2 className=" flex justify-center text-2xl">Total: ${total.toFixed(2)}</h2>
+        <h1 className=" flex justify-center pb-2">Week of {date}</h1>
+        {!showInitialInput ? (
+          <h2 className="flex justify-center text-2xl">Total: ${total.toFixed(2)}</h2>
+        ) : (
+        <div className='flex justify-center'>
+          <input type="text" value={initialTotalInput} onChange={(e) => setInitialTotalInput(e.target.value)} placeholder="Enter Initial Total" />
+          <button onClick={handleInitialTotalSubmit} className="text-white bg-[#dda15e] hover:bg-[#bc6c25] px-3 py-1 rounded-lg">Enter</button>
+        </div>
+        )}
       </div>    
       
 
@@ -116,7 +137,7 @@ function App() {
             </li>
           ))} 
         </ul>
-        <button onClick={handleDeleteAll} className=''>Clear All</button>
+        <button onClick={handleDeleteAll} className=''>Reset All</button>
       </div>
 
     </div>
